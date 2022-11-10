@@ -28,3 +28,6 @@ class EndPointIsNotAccesed(Exception):
 
 class EmptyDictionaryOrListError(Exception):
     """Пустой словарь или список."""
+
+class MessageSendingError(Exception):
+    """Ошибка отправки сообщения."""
