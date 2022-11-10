@@ -52,7 +52,7 @@ def get_api_answer(current_timestamp):
             headers=HEADERS,
             params=params,
         )
-        homework_json = homework.json()
+        homework.json()
     except requests.exceptions.JSONDecodeError as error:
         raise exceptions.InvalidJSONTransform(
             f'Сбой при переводе в формат json: {error}'
@@ -77,7 +77,7 @@ def check_response(response):
         )
     if ('current_date' or 'homeworks') not in response:
         raise exceptions.ResponseIsIncorrect(
-            f'Не корректрный запрос'
+            'Не корректрный запрос'
         )
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
@@ -143,7 +143,7 @@ if __name__ == '__main__':
     logging.basicConfig(
         format='%(asctime)s, %(levelname)s, %(message)s',
         filemode='w',
-        filename=f'logger.log',
+        filename='logger.log',
         level=logging.INFO,
     )
     main()
