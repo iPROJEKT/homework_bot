@@ -4,8 +4,8 @@ import time
 import sys
 
 import requests
-from http import HTTPStatus
 import telegram
+from http import HTTPStatus
 
 from dotenv import load_dotenv
 
@@ -29,14 +29,13 @@ VERDICT_STATUSES = {
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 def send_message(bot, message):
     """Отправка сообщения в Телеграм."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-    except Exception as error:
+    except telegram.error.InvalidToken as error:
         raise exceptions.MessageSendingError(
             f'Сообщение не отправилось - {error}'
         )
@@ -52,7 +51,11 @@ def get_api_answer(current_timestamp):
             headers=HEADERS,
             params=params,
         )
-        homework.json()
+        if homework.status_code != HTTPStatus.OK:
+            raise exceptions.HTTPStatusCodeIncorrect(
+            f'Yandex API недоступен, код ошибки: {homework.status_code}'
+        )
+        return homework.json()
     except requests.exceptions.JSONDecodeError as error:
         raise exceptions.InvalidJSONTransform(
             f'Сбой при переводе в формат json: {error}'
@@ -61,12 +64,6 @@ def get_api_answer(current_timestamp):
         raise exceptions.EndPointIsNotAccesed(
             f'Сбой при запросе к эндпоинту: {error}'
         )
-    if homework.status_code != HTTPStatus.OK:
-        raise exceptions.HTTPStatusCodeIncorrect(
-            f'Yandex API недоступен, код ошибки: {homework.status_code}'
-        )
-
-    return homework.json()
 
 
 def check_response(response):
@@ -75,14 +72,14 @@ def check_response(response):
         raise TypeError(
             f'Ответ пришел в некорректном формате: {type(response)}'
         )
-    if ('current_date' or 'homeworks') not in response:
-        raise exceptions.ResponseIsIncorrect(
-            'Не корректрный запрос'
+    if ('current_date' not in response) or ('homeworks' not in response):
+        raise AttributeError(
+            'Отсутствие "current_date" или "homeworks" в запросе'
         )
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
         raise KeyError(
-            'Неккоректное значение в ответе у домашней работы'
+            'Нет заданной домашки'
         )
 
     return homeworks
@@ -105,11 +102,7 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверяет наличие переменных в локальном хранилище."""
-    for key in (PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, ENDPOINT):
-        if key is None:
-            logging.critical(f'Пропал  {key}')
-            return False
-    return True
+    return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def main():
@@ -118,7 +111,6 @@ def main():
         sys.exit('Отсутствует переменная для работы с ботом')
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
-    last_error = ''
     while True:
         try:
             response = get_api_answer(current_timestamp)
@@ -130,11 +122,8 @@ def main():
             else:
                 logger.info('Новых домашек нет')
         except Exception as error:
-            message = f'Сбой в работе программы: {error}'
-            logger.error(message)
-            if message != last_error:
-                last_error = message
-                send_message(bot, message)
+            logging.error(f'Бот упал с ошибкой: {error}')
+            send_message(f'Бот упал с ошибкой: {error}')
         finally:
             time.sleep(RETRY_TIME)
 
