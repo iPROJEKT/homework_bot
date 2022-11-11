@@ -53,8 +53,8 @@ def get_api_answer(current_timestamp):
         )
         if homework.status_code != HTTPStatus.OK:
             raise exceptions.HTTPStatusCodeIncorrect(
-            f'Yandex API недоступен, код ошибки: {homework.status_code}'
-        )
+                f'Yandex API недоступен, код ошибки: {homework.status_code}'
+            )
         return homework.json()
     except requests.exceptions.JSONDecodeError as error:
         raise exceptions.InvalidJSONTransform(
