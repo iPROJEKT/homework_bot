@@ -5,8 +5,8 @@ import sys
 
 import requests
 import telegram
-from http import HTTPStatus
 
+from http import HTTPStatus
 from dotenv import load_dotenv
 
 import exceptions
@@ -35,7 +35,7 @@ def send_message(bot, message):
     """Отправка сообщения в Телеграм."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-    except telegram.error.InvalidToken as error:
+    except telegram.TelegramError as error:
         raise exceptions.MessageSendingError(
             f'Сообщение не отправилось - {error}'
         )
@@ -72,13 +72,13 @@ def check_response(response):
         raise TypeError(
             f'Ответ пришел в некорректном формате: {type(response)}'
         )
-    if ('current_date' not in response) or ('homeworks' not in response):
-        raise AttributeError(
-            'Отсутствие "current_date" или "homeworks" в запросе'
+    if 'homeworks' not in response:
+        raise KeyError(
+            'Отсутствие "homeworks" в запросе'
         )
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
-        raise KeyError(
+        raise TypeError(
             'Нет заданной домашки'
         )
 
@@ -92,7 +92,7 @@ def parse_status(homework):
     if homework_name is None:
         raise KeyError('Отсутствует имя домашней работы')
     if homework_status not in VERDICT_STATUSES:
-        raise AttributeError(
+        raise NameError(
             'Недокументированный статус домашней работы'
         )
     verdict = VERDICT_STATUSES.get(homework_status)
@@ -123,7 +123,6 @@ def main():
                 logger.info('Новых домашек нет')
         except Exception as error:
             logging.error(f'Бот упал с ошибкой: {error}')
-            send_message(f'Бот упал с ошибкой: {error}')
         finally:
             time.sleep(RETRY_TIME)
 
