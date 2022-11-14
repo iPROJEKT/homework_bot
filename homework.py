@@ -2,11 +2,11 @@ import logging
 import os
 import time
 import sys
+from http import HTTPStatus
 
 import requests
 import telegram
 
-from http import HTTPStatus
 from dotenv import load_dotenv
 
 import exceptions
@@ -35,6 +35,7 @@ def send_message(bot, message):
     """Отправка сообщения в Телеграм."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
+        logger.info('Сообщение доставленно')
     except telegram.TelegramError as error:
         raise exceptions.MessageSendingError(
             f'Сообщение не отправилось - {error}'
@@ -76,6 +77,8 @@ def check_response(response):
         raise KeyError(
             'Отсутствие "homeworks" в запросе'
         )
+    if 'current_date' not in response:
+        logger.error('current_date нет в респонс')
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
         raise TypeError(
@@ -121,7 +124,7 @@ def main():
                 send_message(bot, message)
             else:
                 logger.info('Новых домашек нет')
-        except Exception as error:
+        except exceptions as error:
             logging.error(f'Бот упал с ошибкой: {error}')
         finally:
             time.sleep(RETRY_TIME)
