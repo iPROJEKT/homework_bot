@@ -124,8 +124,11 @@ def main():
                 send_message(bot, message)
             else:
                 logger.info('Новых домашек нет')
+        except telegram.TelegramError as error:
+            logging.error(f'Бот упал с ошибкой: {error}')
         except exceptions as error:
             logging.error(f'Бот упал с ошибкой: {error}')
+            send_message(f'Бот упал с ошибкой: {error}')
         finally:
             time.sleep(RETRY_TIME)
 
