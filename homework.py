@@ -6,7 +6,6 @@ from http import HTTPStatus
 
 import requests
 import telegram
-
 from dotenv import load_dotenv
 
 import exceptions
@@ -35,11 +34,12 @@ def send_message(bot, message):
     """Отправка сообщения в Телеграм."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-        logger.info('Сообщение доставленно')
     except telegram.TelegramError as error:
         raise exceptions.MessageSendingError(
             f'Сообщение не отправилось - {error}'
         )
+    else:
+        logger.info('Сообщение доставленно')
 
 
 def get_api_answer(current_timestamp):
@@ -78,7 +78,9 @@ def check_response(response):
             'Отсутствие "homeworks" в запросе'
         )
     if 'current_date' not in response:
-        logger.error('current_date нет в респонс')
+        logger.info('current_date нет в респонс')
+    if 'current_date' != type(int):
+        logger.info('current_date не целое число')
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
         raise TypeError(
@@ -126,7 +128,11 @@ def main():
                 logger.info('Новых домашек нет')
         except telegram.TelegramError as error:
             logging.error(f'Бот упал с ошибкой: {error}')
-        except exceptions as error:
+        except (
+            exceptions.InvalidJSONTransform,
+            exceptions.HTTPStatusCodeIncorrect,
+            exceptions.MessageSendingError,
+        ) as error:
             logging.error(f'Бот упал с ошибкой: {error}')
             send_message(f'Бот упал с ошибкой: {error}')
         finally:
