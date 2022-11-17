@@ -81,7 +81,7 @@ def check_response(response):
         raise KeyError(
             'Отсутствие "current_date" в запросе'
         )
-    if not isinstance('current_date', int):
+    if not isinstance(response.get('current_date'), int):
         raise TypeError(
             'current_date пришел в некорректном формате'
         )
