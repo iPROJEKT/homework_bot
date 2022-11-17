@@ -78,9 +78,13 @@ def check_response(response):
             'Отсутствие "homeworks" в запросе'
         )
     if 'current_date' not in response:
-        logger.info('current_date нет в респонс')
-    if 'current_date' != type(int):
-        logger.info('current_date не целое число')
+        raise KeyError(
+            'Отсутствие "current_date" в запросе'
+        )
+    if not isinstance('current_date', int):
+        raise TypeError(
+            'current_date пришел в некорректном формате'
+        )
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
         raise TypeError(
@@ -126,14 +130,18 @@ def main():
                 send_message(bot, message)
             else:
                 logger.info('Новых домашек нет')
+        except exceptions.MessageSendingError as error:
+            logging.error(f'Бот упал с ошибкой: {error}')
         except (
+            Exception,
             exceptions.InvalidJSONTransform,
             exceptions.HTTPStatusCodeIncorrect,
-            exceptions.MessageSendingError,
         ) as error:
-            logging.error(f'Бот упал с ошибкой: {error}')
-        except Exception as error:
-            send_message(f'Бот упал с ошибкой: {error}')
+            try:
+                send_message(f'Бот упал с ошибкой: {error}')
+                logging.error(f'Бот упал с ошибкой: {error}')
+            except exceptions.MessageSendingError:
+                logging.error(f'Бот упал с ошибкой: {error}')
         finally:
             time.sleep(RETRY_TIME)
 
