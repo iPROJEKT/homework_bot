@@ -83,7 +83,7 @@ def check_response(response):
         )
     if not isinstance(response.get('current_date'), int):
         raise exceptions.CurrentDateNotInt(
-           'current_date пришел в некорректном формате'
+            'current_date пришел в некорректном формате'
         )
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
