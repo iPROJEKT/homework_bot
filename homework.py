@@ -78,12 +78,12 @@ def check_response(response):
             'Отсутствие "homeworks" в запросе'
         )
     if 'current_date' not in response:
-        raise KeyError(
+        raise exceptions.CurrentDateNotResponse(
             'Отсутствие "current_date" в запросе'
         )
     if not isinstance(response.get('current_date'), int):
-        raise TypeError(
-            'current_date пришел в некорректном формате'
+        raise exceptions.CurrentDateNotInt(
+           'current_date пришел в некорректном формате'
         )
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
@@ -101,7 +101,7 @@ def parse_status(homework):
     if homework_name is None:
         raise KeyError('Отсутствует имя домашней работы')
     if homework_status not in VERDICT_STATUSES:
-        raise NameError(
+        raise ValueError(
             'Недокументированный статус домашней работы'
         )
     verdict = VERDICT_STATUSES.get(homework_status)
@@ -130,13 +130,13 @@ def main():
                 send_message(bot, message)
             else:
                 logger.info('Новых домашек нет')
-        except exceptions.MessageSendingError as error:
-            logging.error(f'Бот упал с ошибкой: {error}')
         except (
-            Exception,
-            exceptions.InvalidJSONTransform,
-            exceptions.HTTPStatusCodeIncorrect,
+            exceptions.MessageSendingError,
+            exceptions.CurrentDateNotResponse,
+            exceptions.CurrentDateNotInt
         ) as error:
+            logging.error(f'Бот упал с ошибкой: {error}')
+        except Exception as error:
             try:
                 send_message(f'Бот упал с ошибкой: {error}')
                 logging.error(f'Бот упал с ошибкой: {error}')

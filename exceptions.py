@@ -29,5 +29,12 @@ class EndPointIsNotAccesed(Exception):
 class EmptyDictionaryOrListError(Exception):
     """Пустой словарь или список."""
 
+
 class MessageSendingError(Exception):
     """Ошибка отправки сообщения."""
+
+class CurrentDateNotResponse(Exception):
+    """Отсутствие "current_date" в запросе"""
+
+class CurrentDateNotInt(Exception):
+    """current_date пришел в некорректном формате"""
